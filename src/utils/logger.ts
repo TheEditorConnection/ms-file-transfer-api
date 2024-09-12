@@ -3,12 +3,10 @@ import * as path from 'path';
 
 const { combine, timestamp, printf, errors } = format;
 
-// Define el formato personalizado para los mensajes de log
 const customFormat = printf(({ level, message, timestamp, stack }) => {
     return `${timestamp} ${level}: ${stack || message}`;
 });
 
-// Define la ruta de la carpeta de logs
 const logDirectory = path.join(__dirname, '../../logs');
 
 export class Logger {
