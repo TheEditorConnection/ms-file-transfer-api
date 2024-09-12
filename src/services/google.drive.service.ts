@@ -2,6 +2,7 @@ import { google, drive_v3 } from 'googleapis';
 import * as stream from 'stream';
 
 import { Config } from '../config/config';
+import { Logger } from '../utils/logger';
 
 export class GoogleDriveService {
     private drive: drive_v3.Drive;
@@ -13,40 +14,77 @@ export class GoogleDriveService {
             scopes: ['https://www.googleapis.com/auth/drive']
         });
         this.drive = google.drive({ version: 'v3', auth });
+        Logger.info('GoogleDriveService initialized.');
     }
 
     public async getFileName(fileId: string): Promise<string> {
-        const response = await this.drive.files.get({
-            fileId,
-            fields: 'name',
-            supportsAllDrives: true
-        });
-        return response.data.name || '';
+        try {
+            Logger.info(`Fetching file name for file ID: ${fileId}`);
+            const response = await this.drive.files.get({
+                fileId,
+                fields: 'name',
+                supportsAllDrives: true
+            });
+            const fileName = response.data.name || '';
+            Logger.info(`File name retrieved: ${fileName}`);
+            return fileName;
+        } catch (error) {
+            Logger.error(`Error fetching file name for file ID: ${fileId}`, error);
+            throw error;
+        }
     }
 
-    public async downloadFile(fileId: string, chunkSize: number): Promise<Buffer> {
-        const response = await this.drive.files.get(
-            { fileId, alt: 'media', supportsAllDrives: true },
-            { responseType: 'stream' }
-        );
-
-        const chunks: Buffer[] = [];
-        return new Promise((resolve, reject) => {
-            const passThrough = new stream.PassThrough();
-            response.data.pipe(passThrough);
-
-            let totalSize = 0;
-            passThrough.on('data', (chunk) => {
-                chunks.push(chunk);
-                totalSize += chunk.length;
-                if (totalSize >= chunkSize) {
-                    passThrough.pause();
-                    setTimeout(() => passThrough.resume(), 1000);
-                }
+    private async getFileSize(fileId: string): Promise<number> {
+        try {
+            Logger.info(`Fetching file size for file ID: ${fileId}`);
+            const response = await this.drive.files.get({
+                fileId,
+                fields: 'size',
+                supportsAllDrives: true
             });
+            const fileSize = parseInt(response.data.size || '0', 10);
+            Logger.info(`File size retrieved: ${fileSize} bytes`);
+            return fileSize;
+        } catch (error) {
+            Logger.error(`Error fetching file size for file ID: ${fileId}`, error);
+            throw error;
+        }
+    }
 
-            passThrough.on('end', () => resolve(Buffer.concat(chunks)));
-            passThrough.on('error', reject);
-        });
+    public async downloadFile(fileId: string): Promise<Buffer> {
+        try {
+            Logger.info(`Starting download for file ID: ${fileId}`);
+            const totalSize = await this.getFileSize(fileId);
+            const response = await this.drive.files.get(
+                { fileId, alt: 'media', supportsAllDrives: true },
+                { responseType: 'stream' }
+            );
+
+            const chunks: Buffer[] = [];
+            return new Promise((resolve, reject) => {
+                const passThrough = new stream.PassThrough();
+                response.data.pipe(passThrough);
+
+                let downloadedSize = 0;
+                passThrough.on('data', (chunk) => {
+                    chunks.push(chunk);
+                    downloadedSize += chunk.length;
+                    const progress = (downloadedSize / totalSize) * 100;
+                    Logger.info(`Download progress: ${progress.toFixed(2)}%`);
+                });
+
+                passThrough.on('end', () => {
+                    Logger.info(`Download completed for file ID: ${fileId}`);
+                    resolve(Buffer.concat(chunks));
+                });
+                passThrough.on('error', (error) => {
+                    Logger.error(`Error during download for file ID: ${fileId}`, error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            Logger.error(`Error starting download for file ID: ${fileId}`, error);
+            throw error;
+        }
     }
 }

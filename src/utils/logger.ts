@@ -1,10 +1,15 @@
 import { createLogger, format, transports } from 'winston';
+import * as path from 'path';
 
 const { combine, timestamp, printf, errors } = format;
 
+// Define el formato personalizado para los mensajes de log
 const customFormat = printf(({ level, message, timestamp, stack }) => {
     return `${timestamp} ${level}: ${stack || message}`;
 });
+
+// Define la ruta de la carpeta de logs
+const logDirectory = path.join(__dirname, '../../logs');
 
 export class Logger {
     private static logger = createLogger({
@@ -16,8 +21,8 @@ export class Logger {
         ),
         transports: [
             new transports.Console(),
-            new transports.File({ filename: 'error.log', level: 'error' }),
-            new transports.File({ filename: 'combined.log' })
+            new transports.File({ filename: path.join(logDirectory, 'error.log'), level: 'error' }),
+            new transports.File({ filename: path.join(logDirectory, 'combined.log') })
         ]
     });
 
