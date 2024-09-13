@@ -27,12 +27,13 @@ export class DownloadAndUploadCommand {
 
         try {
             const fileName = await this.googleDriveService.getFileName(this.googleDriveFileId);
+            const fileSize = await this.googleDriveService.getFileSize(this.googleDriveFileId);  // Obtener el tamaño del archivo
             const filePath = `google_drive_upload/${this.projectId}/${this.deliveryItemId}/${this.googleDriveFileId}_${fileName}`;
-            Logger.info(`File name retrieved: ${fileName}`);
+            Logger.info(`File name retrieved: ${fileName}`)
 
             // Descarga y sube el archivo simultáneamente usando stream
             const driveStream = await this.googleDriveService.downloadFileAsStream(this.googleDriveFileId);
-            await this.s3Service.uploadFileStream(driveStream, filePath);
+            await this.s3Service.uploadFileStream(driveStream, filePath, fileSize, this.googleDriveFileId);
 
             Logger.info(`File streamed and uploaded to S3 successfully`);
 

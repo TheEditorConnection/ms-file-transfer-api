@@ -20,24 +20,47 @@ export class S3Service {
         Logger.info('S3Service initialized.');
     }
 
-    public async uploadFileStream(readableStream: stream.Readable, filePath: string): Promise<void> {
-        try {
-            Logger.info(`Uploading file stream to S3: ${filePath}`);
+    public async uploadFileStream(readableStream: stream.Readable, filePath: string, totalSize: number, googleDriveFileId: string): Promise<void> {
+        const MAX_RETRIES = 3;
+        let attempt = 0;
 
-            const upload = new Upload({
-                client: this.s3,
-                params: {
-                    Bucket: this.bucketName,
-                    Key: filePath,
-                    Body: readableStream
+        while (attempt < MAX_RETRIES) {
+            try {
+                Logger.info(`Uploading file stream to S3: ${filePath}, attempt ${attempt + 1}, Google Drive File ID: ${googleDriveFileId}`);
+
+                const upload = new Upload({
+                    client: this.s3,
+                    params: {
+                        Bucket: this.bucketName,
+                        Key: filePath,
+                        Body: readableStream
+                    },
+                    partSize: 30 * 1024 * 1024,
+                    leavePartsOnError: false,
+                });
+
+                upload.on("httpUploadProgress", (progress) => {
+                    if (progress.loaded) {
+                        const percentage = (progress.loaded / totalSize) * 100;
+                        Logger.info(`Upload progress for Google Drive File ID ${googleDriveFileId}: ${percentage.toFixed(2)}%`);
+                    } else {
+                        Logger.warn(`Progress information not available for Google Drive File ID: ${googleDriveFileId}`);
+                    }
+                });
+
+                await upload.done();
+                Logger.info(`File stream uploaded successfully to S3 for Google Drive File ID: ${googleDriveFileId}, Path: ${filePath}`);
+                break;
+            } catch (error) {
+                Logger.error(`Error uploading file stream to S3: ${filePath} for Google Drive File ID: ${googleDriveFileId}`, error);
+
+                if (attempt >= MAX_RETRIES - 1) {
+                    throw error;
                 }
-            });
 
-            await upload.done();
-            Logger.info(`File stream uploaded successfully: ${filePath}`);
-        } catch (error) {
-            Logger.error(`Error uploading file stream to S3: ${filePath}`, error);
-            throw error;
+                Logger.info(`Retrying upload for file: ${filePath}, Google Drive File ID: ${googleDriveFileId}`);
+                attempt++;
+            }
         }
     }
 }

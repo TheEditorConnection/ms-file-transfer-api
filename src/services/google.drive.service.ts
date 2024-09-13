@@ -34,6 +34,23 @@ export class GoogleDriveService {
         }
     }
 
+    public async getFileSize(fileId: string): Promise<number> {
+        try {
+            Logger.info(`Fetching file size for file ID: ${fileId}`);
+            const response = await this.drive.files.get({
+                fileId,
+                fields: 'size',
+                supportsAllDrives: true
+            });
+            const fileSize = parseInt(response.data.size || '0', 10);
+            Logger.info(`File size retrieved: ${fileSize} bytes`);
+            return fileSize;
+        } catch (error) {
+            Logger.error(`Error fetching file size for file ID: ${fileId}`, error);
+            throw error;
+        }
+    }
+
     public async downloadFileAsStream(fileId: string): Promise<stream.Readable> {
         try {
             Logger.info(`Starting stream download for file ID: ${fileId}`);
