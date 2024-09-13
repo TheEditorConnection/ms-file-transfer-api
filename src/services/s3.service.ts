@@ -35,7 +35,8 @@ export class S3Service {
                         Key: filePath,
                         Body: readableStream
                     },
-                    partSize: 30 * 1024 * 1024,
+                    partSize: 64 * 1024 * 1024, // Aumentar tamaño de parte a 64MB
+                    queueSize: 8, // Aumentar el número de partes cargadas simultáneamente
                     leavePartsOnError: false,
                 });
 
