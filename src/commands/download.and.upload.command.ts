@@ -1,5 +1,6 @@
 import { Config } from '../config/config';
 import { GoogleDriveService } from '../services/google.drive.service';
+import { JWTService } from '../services/jwt.service';
 import { S3Service } from '../services/s3.service';
 import { Logger } from '../utils/logger';
 import { Notifier } from '../utils/notifier';
@@ -11,18 +12,29 @@ export class DownloadAndUploadCommand {
     private callbackUrl: string;
     private googleDriveService: GoogleDriveService;
     private s3Service: S3Service;
+    private jwtService: JWTService;
+    private authorizationToken: string;
 
-    constructor(googleDriveFileId: string, projectId: string, deliveryItemId: string, callbackUrl: string) {
+    constructor(googleDriveFileId: string, projectId: string, deliveryItemId: string, callbackUrl: string, authorizationToken: string) {
         this.googleDriveFileId = googleDriveFileId;
         this.projectId = projectId;
         this.deliveryItemId = deliveryItemId;
         this.callbackUrl = callbackUrl;
         this.googleDriveService = new GoogleDriveService();
         this.s3Service = new S3Service();
+        this.jwtService = new JWTService();
+        this.authorizationToken = authorizationToken;
     }
 
     public async execute(): Promise<void> {
         const startTime = new Date();
+        const tokenIsValid = await this.jwtService.verify(this.authorizationToken);
+
+        if(!tokenIsValid) {
+            // Since the error is handled by the verify method i'll just return here
+            return;
+        }
+
         Logger.info(`Starting streaming upload process for Google Drive file ID: ${this.googleDriveFileId} at ${startTime.toISOString()}`);
 
         try {
