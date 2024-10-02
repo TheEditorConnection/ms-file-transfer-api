@@ -1,4 +1,4 @@
-import { S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Config } from '../config/config';
 import { Logger } from '../utils/logger';
 import * as stream from 'stream';
@@ -62,6 +62,26 @@ export class S3Service {
                 Logger.info(`Retrying upload for file: ${filePath}, Google Drive File ID: ${googleDriveFileId}`);
                 attempt++;
             }
+        }
+    }
+
+    public async downloadFileAsStream(filePath: string): Promise<stream.Readable> {
+        try {
+            Logger.info(`Starting download of file from S3: ${filePath}`);
+
+            const getObjectParams = {
+                Bucket: this.bucketName,
+                Key: filePath
+            };
+
+            const command = new GetObjectCommand(getObjectParams);
+            const response = await this.s3.send(command);
+
+            Logger.info(`S3 file stream started for: ${filePath}`);
+            return response.Body as stream.Readable;  // Devuelve el stream de S3
+        } catch (error) {
+            Logger.error(`Error downloading file from S3: ${filePath}`, error);
+            throw error;
         }
     }
 }

@@ -65,4 +65,33 @@ export class GoogleDriveService {
             throw error;
         }
     }
+
+    public async uploadFileStream(readableStream: stream.Readable, fileName: string, folderId: string): Promise<string> {
+        try {
+            Logger.info(`Uploading file: ${fileName} to Google Drive`);
+
+            const fileMetadata = {
+                name: fileName,
+                parents: [folderId]  // Folder ID where the file will be uploaded
+            };
+
+            const media = {
+                mimeType: 'application/octet-stream',
+                body: readableStream
+            };
+
+            const response = await this.drive.files.create({
+                requestBody: fileMetadata,
+                media: media,
+                fields: 'id'
+            });
+
+            const fileId = response.data.id!;
+            Logger.info(`File uploaded to Google Drive with ID: ${fileId}`);
+            return fileId;
+        } catch (error) {
+            Logger.error(`Error uploading file to Google Drive: ${fileName}`, error);
+            throw error;
+        }
+    }
 }
