@@ -72,7 +72,7 @@ export class GoogleDriveService {
 
             const fileMetadata = {
                 name: fileName,
-                parents: [folderId]  // Folder ID where the file will be uploaded
+                parents: [folderId]
             };
 
             const media = {

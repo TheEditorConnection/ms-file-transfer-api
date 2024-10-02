@@ -4,16 +4,16 @@ import { Logger } from '../utils/logger';
 import { Notifier } from '../utils/notifier';
 
 export class UploadToGoogleDriveCommand {
+    private payload: any;
     private s3FilePath: string;
     private googleDriveFolderId: string;
-    private callbackUrl: string;
     private s3Service: S3Service;
     private googleDriveService: GoogleDriveService;
 
-    constructor(s3FilePath: string, googleDriveFolderId: string, callbackUrl: string) {
-        this.s3FilePath = s3FilePath;
-        this.googleDriveFolderId = googleDriveFolderId;
-        this.callbackUrl = callbackUrl;
+    constructor(payload: any) {
+        this.payload = payload;
+        this.s3FilePath = payload.s3FilePath;
+        this.googleDriveFolderId = payload.googleDriveFolderId;
         this.s3Service = new S3Service();
         this.googleDriveService = new GoogleDriveService();
     }
@@ -34,9 +34,8 @@ export class UploadToGoogleDriveCommand {
             Logger.info(`File uploaded to Google Drive successfully, Drive File ID: ${driveFileId}`);
 
             // Notificar el éxito
-            Notifier.notify(this.callbackUrl, {
-                s3FilePath: this.s3FilePath,
-                googleDriveFileId: driveFileId,
+            Notifier.notify({
+                ...this.payload,
                 status: 'success'
             });
 
@@ -48,8 +47,8 @@ export class UploadToGoogleDriveCommand {
             Logger.error('Error during file upload to Google Drive', error);
 
             // Notificar en caso de error
-            Notifier.notify(this.callbackUrl, {
-                s3FilePath: this.s3FilePath,
+            Notifier.notify({
+                ...this.payload,
                 status: 'fail',
                 error: error.message
             });
