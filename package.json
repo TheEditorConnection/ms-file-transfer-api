@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev src/server.ts",
+    "auth-token": "ts-node src/scripts/authToken.ts",
     "start": "npm run compile && node build/server.js",
     "compile": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
