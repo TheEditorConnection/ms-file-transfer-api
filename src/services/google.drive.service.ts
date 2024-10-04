@@ -34,7 +34,7 @@ export class GoogleDriveService {
         }
     }
 
-    private async getFileSize(fileId: string): Promise<number> {
+    public async getFileSize(fileId: string): Promise<number> {
         try {
             Logger.info(`Fetching file size for file ID: ${fileId}`);
             const response = await this.drive.files.get({
@@ -51,39 +51,46 @@ export class GoogleDriveService {
         }
     }
 
-    public async downloadFile(fileId: string): Promise<Buffer> {
+    public async downloadFileAsStream(fileId: string): Promise<stream.Readable> {
         try {
-            Logger.info(`Starting download for file ID: ${fileId}`);
-            const totalSize = await this.getFileSize(fileId);
+            Logger.info(`Starting stream download for file ID: ${fileId}`);
             const response = await this.drive.files.get(
                 { fileId, alt: 'media', supportsAllDrives: true },
                 { responseType: 'stream' }
             );
-
-            const chunks: Buffer[] = [];
-            return new Promise((resolve, reject) => {
-                const passThrough = new stream.PassThrough();
-                response.data.pipe(passThrough);
-
-                let downloadedSize = 0;
-                passThrough.on('data', (chunk) => {
-                    chunks.push(chunk);
-                    downloadedSize += chunk.length;
-                    const progress = (downloadedSize / totalSize) * 100;
-                    Logger.info(`Download progress: ${progress.toFixed(2)}%`);
-                });
-
-                passThrough.on('end', () => {
-                    Logger.info(`Download completed for file ID: ${fileId}`);
-                    resolve(Buffer.concat(chunks));
-                });
-                passThrough.on('error', (error) => {
-                    Logger.error(`Error during download for file ID: ${fileId}`, error);
-                    reject(error);
-                });
-            });
+            Logger.info(`Download stream started for file ID: ${fileId}`);
+            return response.data as stream.Readable;
         } catch (error) {
-            Logger.error(`Error starting download for file ID: ${fileId}`, error);
+            Logger.error(`Error starting download stream for file ID: ${fileId}`, error);
+            throw error;
+        }
+    }
+
+    public async uploadFileStream(readableStream: stream.Readable, fileName: string, folderId: string): Promise<string> {
+        try {
+            Logger.info(`Uploading file: ${fileName} to Google Drive`);
+
+            const fileMetadata = {
+                name: fileName,
+                parents: [folderId]
+            };
+
+            const media = {
+                mimeType: 'application/octet-stream',
+                body: readableStream
+            };
+
+            const response = await this.drive.files.create({
+                requestBody: fileMetadata,
+                media: media,
+                fields: 'id'
+            });
+
+            const fileId = response.data.id!;
+            Logger.info(`File uploaded to Google Drive with ID: ${fileId}`);
+            return fileId;
+        } catch (error) {
+            Logger.error(`Error uploading file to Google Drive: ${fileName}`, error);
             throw error;
         }
     }
