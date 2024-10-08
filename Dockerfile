@@ -3,7 +3,7 @@ FROM node:18-alpine as build-stage
 WORKDIR /ms-file-transfer-api
 COPY . /ms-file-transfer-api
 RUN npm install
-RUN npm run prepare
+RUN npm run build
 
 # Stage 1
 FROM node:18-alpine
