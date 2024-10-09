@@ -28,6 +28,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Run Tests on Application
+    needs: [build]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -40,7 +41,7 @@ jobs:
 
   continue-delivery:
     name: Deploy to Amazon EKS Cluster
-    needs: [build, test]
+    needs: [test]
     runs-on: ubuntu-latest
 
     steps:
@@ -68,19 +69,12 @@ jobs:
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
-      - name: Deploy Docker Image to EKS
-        uses: kodermax/kubectl-aws-eks@main
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Setup kubectl with EKS
+        uses: aws-actions/eks-login@v2
         with:
-          args: set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          region: ${{ secrets.AWS_REGION }}
+          cluster-name: ${{ secrets.EKS_CLUSTER_NAME }}
 
-      - name: Wait for EKS Deployment to Complete
-        uses: kodermax/kubectl-aws-eks@main
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-        with:
-          args: rollout status deployment/my-app
+      - name: Create Namespace if not exists
+        run: |
+          kubectl create namespace ${{ secrets.EKS_NAMESPACE_NAME }} || echo "Namespace already exists"
