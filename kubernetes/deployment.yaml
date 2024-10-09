@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-file-transfer-api-deployment
+  namespace: ms-file-transfer-api
+  labels:
+    app: ms-file-transfer-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ms-file-transfer-api
+  template:
+    metadata:
+      labels:
+        app: ms-file-transfer-api
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+                      - arm64
+      containers:
+        - name: app-container
+          image: "<IMAGE_PLACEHOLDER>"
+          ports:
+            - name: http
+              containerPort: 80
+          imagePullPolicy: IfNotPresent
+      nodeSelector:
+        kubernetes.io/os: linux

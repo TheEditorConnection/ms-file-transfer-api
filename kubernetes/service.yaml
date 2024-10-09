@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-file-transfer-api-service
+  namespace: ms-file-transfer-api
+  labels:
+    app: ms-file-transfer-api
+spec:
+  selector:
+    app: ms-file-transfer-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
