@@ -6,7 +6,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name:
+    name: Pull Request Checks
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      # - name: Run linter
+      #   run: npm run lint
+
+      - name: Run build
+        run: npm run build
+
+  test:
+    runs-on: ubuntu-latest
+    name: Pull Request Tests
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -15,10 +31,4 @@ jobs:
         run: npm install
 
       - name: Run tests
-        run: npm test
-
-      # - name: Run linter
-      #   run: npm run lint
-
-      - name: Run build
-        run: npm run build
+        run: npm run test
