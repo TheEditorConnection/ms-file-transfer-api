@@ -25,7 +25,7 @@ app.get('/readiness', (_req, res) => {
     res.status(200).send('Service is ready');
 });
 
-app.get('/info', (req, res) => {
+app.get('/info', (_req, res) => {
     const appInfo = {
         name: process.env.APP_NAME || 'Unknown',
         version: process.env.APP_VERSION || 'Unknown',
