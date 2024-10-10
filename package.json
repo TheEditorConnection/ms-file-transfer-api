@@ -1,6 +1,6 @@
 {
   "name": "ms-file-transfer-api",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "The Editor Connection Microservice File Transfer API",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.627.0",
     "@aws-sdk/lib-storage": "^3.627.0",
+    "@aws-sdk/s3-request-presigner": "^3.668.0",
     "axios": "^1.7.3",
     "body-parser": "^1.20.2",
     "dotenv": "^16.4.5",

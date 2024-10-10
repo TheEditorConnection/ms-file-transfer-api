@@ -8,7 +8,10 @@ export class JWTService {
     private secret: string;
 
     constructor() {
-        this.secret = 'TODOChangeThisForaValidSecretAndSecureCode'
+        this.secret = process.env.JWT_SECRET || '';
+        if (!this.secret) {
+            throw new Error('JWT_SECRET environment variable is not defined');
+        }
     }
 
     public sign(
