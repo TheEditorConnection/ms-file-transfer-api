@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import { DownloadAndUploadCommand } from '../commands/download.and.upload.command';
+import { snakeToCamel } from '../utils/caseConverter';
 
 export class WebhookHandler {
     public static async handle(req: Request, res: Response): Promise<void> {
-        const { googleDriveFileId, projectId, deliveryItemId } = req.body;
+        const body = req.body;
+        const { googleDriveFileId, projectId, deliveryItemId } = snakeToCamel(body);
         const payload = req.body;
         const authorizationToken = req.headers.authorization ? req.headers.authorization.split(" ")[1] : '';
 
