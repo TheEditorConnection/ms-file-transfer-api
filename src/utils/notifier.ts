@@ -1,14 +1,15 @@
 import axios from 'axios';
-import { Config } from '../config/config';
 import { camelToSnake } from './caseConverter';
+import { Logger } from './logger';
 
 export class Notifier {
-    public static async notify(payload: any): Promise<void> {
+    public static async notify(url: string, token: string, payload: any): Promise<void> {
         try {
-            const callbackUrl = Config.get('CALLBACK_URL');
-            await axios.post(callbackUrl, camelToSnake(payload));
+            const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+            await axios.post(url, camelToSnake(payload), { headers });
+            Logger.info(`Notification sent: ${JSON.stringify(payload)}`);
         } catch (error) {
-            console.error('Notification failed:', error);
+            Logger.error(`Error sending notification: ${error}`);
         }
     }
 }

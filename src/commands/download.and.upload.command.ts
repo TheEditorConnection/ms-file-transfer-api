@@ -1,3 +1,4 @@
+import { Config } from '../config/config';
 import { GoogleDriveService } from '../services/google.drive.service';
 import { JWTService } from '../services/jwt.service';
 import { S3Service } from '../services/s3.service';
@@ -46,11 +47,14 @@ export class DownloadAndUploadCommand {
 
             Logger.info(`File streamed and uploaded to S3 successfully`);
             Logger.info(`File URL: ${awsObjectUrl}`);
-            Notifier.notify({
-                ...this.payload,
-                status: 'success',
-                awsObjectUrl: awsObjectUrl
-            });
+            Notifier.notify(
+                this.getUrl(),
+                this.getToken(),
+                {
+                    ...this.payload,
+                    status: 'success',
+                    awsObjectUrl: awsObjectUrl
+                });
 
             const endTime = new Date();
             const duration = (endTime.getTime() - startTime.getTime()) / 1000;
@@ -59,11 +63,22 @@ export class DownloadAndUploadCommand {
 
         } catch (error) {
             Logger.error(`Error during file upload process`, error);
-            Notifier.notify({
-                ...this.payload,
-                status: 'fail',
-                error: error.message
-            });
+            Notifier.notify(
+                this.getUrl(),
+                this.getToken(),
+                {
+                    ...this.payload,
+                    status: 'fail',
+                    error: error.message
+                });
         }
+    }
+
+    public getUrl(): string {
+        return Config.get('URL_GDRIVE_TO_S3');
+    }
+
+    public getToken(): string {
+        return Config.get('TOKEN_GDRIVE_TO_S3');
     }
 }
