@@ -4,10 +4,9 @@ import { snakeToCamel } from '../utils/caseConverter';
 
 export class UploadWebhookHandler {
     public static async handle(req: Request, res: Response): Promise<void> {
-        const body = req.body;
-        const { s3FilePath, googleDriveFolderId } = snakeToCamel(body);
+        const payload = snakeToCamel(req.body);
+        const { s3FilePath, googleDriveFolderId } = payload;
         const authorizationToken = req.headers.authorization ? req.headers.authorization.split(" ")[1] : '';
-        const payload = req.body;
 
         console.log(s3FilePath, googleDriveFolderId);
 
