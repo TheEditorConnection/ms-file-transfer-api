@@ -20,19 +20,22 @@ export class JWTService {
     public sign(
         subject: string,
         audience: Audience[],
-        expiresIn: string,
+        expiresIn?: string | null,
         grant = [] as Grant[],
     ): string {
         Logger.info(`Signed Token for ${subject}`);
-        return jwt.sign(
-            {
-                aud: audience,
-                sub: subject,
-                grant: grant,
-            },
-            this.secret,
-            { expiresIn },
-        );
+
+        const payload = {
+            aud: audience,
+            sub: subject,
+            grant: grant,
+        };
+
+        const options: jwt.SignOptions = expiresIn
+            ? { expiresIn }
+            : {};
+
+        return jwt.sign(payload, this.secret, options);
     }
 
     public async verify(
