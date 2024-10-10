@@ -1,5 +1,8 @@
 import { Logger } from '../utils/logger';
 import * as jwt from "jsonwebtoken";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export type Grant = "admin";
 export type Audience = "admin" | string;

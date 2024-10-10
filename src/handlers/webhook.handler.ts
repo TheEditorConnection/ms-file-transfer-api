@@ -4,9 +4,8 @@ import { snakeToCamel } from '../utils/caseConverter';
 
 export class WebhookHandler {
     public static async handle(req: Request, res: Response): Promise<void> {
-        const body = req.body;
-        const { googleDriveFileId, projectId, deliveryItemId } = snakeToCamel(body);
-        const payload = req.body;
+        const payload = snakeToCamel(req.body);
+        const { googleDriveFileId, projectId, deliveryItemId } = payload;
         const authorizationToken = req.headers.authorization ? req.headers.authorization.split(" ")[1] : '';
 
         if (!googleDriveFileId || !projectId || !deliveryItemId) {
