@@ -2,6 +2,7 @@ import { S3Service } from '../services/s3.service';
 import { GoogleDriveService } from '../services/google.drive.service';
 import { Logger } from '../utils/logger';
 import { Notifier } from '../utils/notifier';
+import { JWTService } from '../services/jwt.service';
 
 export class UploadToGoogleDriveCommand {
     private payload: any;
@@ -9,17 +10,27 @@ export class UploadToGoogleDriveCommand {
     private googleDriveFolderId: string;
     private s3Service: S3Service;
     private googleDriveService: GoogleDriveService;
+    private authorizationToken: string;
+    private jwtService: JWTService;
 
-    constructor(payload: any) {
+    constructor(payload: any, authorizationToken: string) {
         this.payload = payload;
         this.s3FilePath = payload.s3FilePath;
         this.googleDriveFolderId = payload.googleDriveFolderId;
         this.s3Service = new S3Service();
         this.googleDriveService = new GoogleDriveService();
+        this.authorizationToken = authorizationToken;
     }
 
     public async execute(): Promise<void> {
         const startTime = new Date();
+
+        const tokenIsValid = await this.jwtService.verify(this.authorizationToken);
+
+        if (!tokenIsValid) {
+            // Since the error is handled by the verify method i'll just return here
+            return;
+        }
 
         Logger.info(`Starting process to upload S3 file: ${this.s3FilePath} to Google Drive at ${startTime.toISOString()}`);
 
@@ -46,7 +57,6 @@ export class UploadToGoogleDriveCommand {
         } catch (error) {
             Logger.error('Error during file upload to Google Drive', error);
 
-            // Notificar en caso de error
             Notifier.notify({
                 ...this.payload,
                 status: 'fail',

@@ -12,11 +12,14 @@ export class WebhookHandler {
             return;
         }
 
-        payload.authorizationToken = authorizationToken;
+        if (!authorizationToken) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
 
         res.status(200).json({ status: 'received', payload });
 
-        const command = new DownloadAndUploadCommand(payload);
+        const command = new DownloadAndUploadCommand(payload, authorizationToken);
         command.execute();
     }
 }

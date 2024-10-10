@@ -3,6 +3,7 @@ import { Config } from '../config/config';
 import { Logger } from '../utils/logger';
 import * as stream from 'stream';
 import { Upload } from '@aws-sdk/lib-storage';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export class S3Service {
     private s3: S3Client;
@@ -20,7 +21,7 @@ export class S3Service {
         Logger.info('S3Service initialized.');
     }
 
-    public async uploadFileStream(readableStream: stream.Readable, filePath: string, totalSize: number, googleDriveFileId: string): Promise<void> {
+    public async uploadFileStream(readableStream: stream.Readable, filePath: string, totalSize: number, googleDriveFileId: string): Promise<string> {
         const MAX_RETRIES = 3;
         let attempt = 0;
 
@@ -35,8 +36,8 @@ export class S3Service {
                         Key: filePath,
                         Body: readableStream
                     },
-                    partSize: 64 * 1024 * 1024, // Aumentar tamaño de parte a 64MB
-                    queueSize: 8, // Aumentar el número de partes cargadas simultáneamente
+                    partSize: 64 * 1024 * 1024,
+                    queueSize: 8,
                     leavePartsOnError: false,
                 });
 
@@ -51,7 +52,16 @@ export class S3Service {
 
                 await upload.done();
                 Logger.info(`File stream uploaded successfully to S3 for Google Drive File ID: ${googleDriveFileId}, Path: ${filePath}`);
-                break;
+
+                const command = new GetObjectCommand({
+                    Bucket: this.bucketName,
+                    Key: filePath,
+                });
+
+                const awsObjectUrl = await getSignedUrl(this.s3, command);
+                Logger.info(`Generated signed URL: ${awsObjectUrl}`);
+
+                return awsObjectUrl;
             } catch (error) {
                 Logger.error(`Error uploading file stream to S3: ${filePath} for Google Drive File ID: ${googleDriveFileId}`, error);
 
@@ -63,6 +73,8 @@ export class S3Service {
                 attempt++;
             }
         }
+
+        throw new Error('Failed to upload file after maximum retries');
     }
 
     public async downloadFileAsStream(filePath: string): Promise<stream.Readable> {

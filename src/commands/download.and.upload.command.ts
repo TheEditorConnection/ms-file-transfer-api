@@ -1,4 +1,3 @@
-import { Config } from '../config/config';
 import { GoogleDriveService } from '../services/google.drive.service';
 import { JWTService } from '../services/jwt.service';
 import { S3Service } from '../services/s3.service';
@@ -15,7 +14,7 @@ export class DownloadAndUploadCommand {
     private jwtService: JWTService;
     private authorizationToken: string;
 
-    constructor(payload: any) {
+    constructor(payload: any, authorizationToken: string) {
         this.payload = payload;
         this.googleDriveFileId = payload.googleDriveFileId;
         this.projectId = payload.projectId;
@@ -23,7 +22,7 @@ export class DownloadAndUploadCommand {
         this.googleDriveService = new GoogleDriveService();
         this.s3Service = new S3Service();
         this.jwtService = new JWTService();
-        this.authorizationToken = payload.authorizationToken;
+        this.authorizationToken = authorizationToken;
     }
 
     public async execute(): Promise<void> {
@@ -31,7 +30,6 @@ export class DownloadAndUploadCommand {
         const tokenIsValid = await this.jwtService.verify(this.authorizationToken);
 
         if (!tokenIsValid) {
-            // Since the error is handled by the verify method i'll just return here
             return;
         }
 
@@ -43,13 +41,10 @@ export class DownloadAndUploadCommand {
             const filePath = `google_drive_upload/${this.projectId}/${this.deliveryItemId}/${this.googleDriveFileId}_${fileName}`;
             Logger.info(`File name retrieved: ${fileName}`)
 
-            // Descarga y sube el archivo simultáneamente usando stream
             const driveStream = await this.googleDriveService.downloadFileAsStream(this.googleDriveFileId);
-            await this.s3Service.uploadFileStream(driveStream, filePath, fileSize, this.googleDriveFileId);
+            const awsObjectUrl = await this.s3Service.uploadFileStream(driveStream, filePath, fileSize, this.googleDriveFileId);
 
             Logger.info(`File streamed and uploaded to S3 successfully`);
-
-            const awsObjectUrl = `https://${Config.get('S3_BUCKET_NAME')}.s3.${Config.get('AWS_REGION')}.amazonaws.com/${filePath}`;
             Logger.info(`File URL: ${awsObjectUrl}`);
             Notifier.notify({
                 ...this.payload,
@@ -58,7 +53,7 @@ export class DownloadAndUploadCommand {
             });
 
             const endTime = new Date();
-            const duration = (endTime.getTime() - startTime.getTime()) / 1000; // en segundos
+            const duration = (endTime.getTime() - startTime.getTime()) / 1000;
             Logger.info(`Upload process completed at ${endTime.toISOString()}`);
             Logger.info(`Total time taken: ${duration.toFixed(2)} seconds`);
 
