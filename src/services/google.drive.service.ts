@@ -83,7 +83,8 @@ export class GoogleDriveService {
             const response = await this.drive.files.create({
                 requestBody: fileMetadata,
                 media: media,
-                fields: 'id'
+                fields: 'id',
+                supportsAllDrives: true
             });
 
             const fileId = response.data.id!;
