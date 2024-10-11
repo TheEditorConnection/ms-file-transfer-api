@@ -56,6 +56,7 @@ export class UploadToGoogleDriveCommand {
                 this.getToken(),
                 {
                     ...this.payload,
+                    googleDriveFileId: driveFileId,
                     status: 'success'
                 });
 

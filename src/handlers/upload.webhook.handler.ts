@@ -8,8 +8,6 @@ export class UploadWebhookHandler {
         const { s3FilePath, googleDriveFolderId } = payload;
         const authorizationToken = req.headers.authorization ? req.headers.authorization.split(" ")[1] : '';
 
-        console.log(s3FilePath, googleDriveFolderId);
-
         if (!s3FilePath || !googleDriveFolderId) {
             res.status(400).json({ error: 'Missing required parameters' });
             return;
