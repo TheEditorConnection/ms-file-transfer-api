@@ -55,10 +55,10 @@ export class S3Service {
 
                 const command = new GetObjectCommand({
                     Bucket: this.bucketName,
-                    Key: filePath,
+                    Key: filePath
                 });
 
-                const awsObjectUrl = await getSignedUrl(this.s3, command);
+                const awsObjectUrl = await getSignedUrl(this.s3, command, { expiresIn: 604800 });
                 Logger.info(`Generated signed URL: ${awsObjectUrl}`);
 
                 return awsObjectUrl;
@@ -90,7 +90,7 @@ export class S3Service {
             const response = await this.s3.send(command);
 
             Logger.info(`S3 file stream started for: ${filePath}`);
-            return response.Body as stream.Readable;  // Devuelve el stream de S3
+            return response.Body as stream.Readable;
         } catch (error) {
             Logger.error(`Error downloading file from S3: ${filePath}`, error);
             throw error;
