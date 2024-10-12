@@ -8,11 +8,13 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 export class S3Service {
     private s3: S3Client;
     private bucketName: string;
+    private region: string;
 
     constructor() {
         this.bucketName = Config.get('S3_BUCKET_NAME');
+        this.region = Config.get('AWS_REGION');
         this.s3 = new S3Client({
-            region: Config.get('AWS_REGION'),
+            region: this.region,
             credentials: {
                 accessKeyId: Config.get('AWS_ACCESS_KEY_ID'),
                 secretAccessKey: Config.get('AWS_SECRET_ACCESS_KEY')
@@ -21,7 +23,7 @@ export class S3Service {
         Logger.info('S3Service initialized.');
     }
 
-    public async uploadFileStream(readableStream: stream.Readable, filePath: string, totalSize: number, googleDriveFileId: string): Promise<string> {
+    public async uploadFileStream(readableStream: stream.Readable, filePath: string, totalSize: number, googleDriveFileId: string): Promise<{ signedUrl: string, objectUrl: string }> {
         const MAX_RETRIES = 3;
         let attempt = 0;
 
@@ -57,11 +59,13 @@ export class S3Service {
                     Bucket: this.bucketName,
                     Key: filePath
                 });
+                const signedUrl = await getSignedUrl(this.s3, command, { expiresIn: 604800 });
+                Logger.info(`Generated signed URL: ${signedUrl}`);
 
-                const awsObjectUrl = await getSignedUrl(this.s3, command, { expiresIn: 604800 });
-                Logger.info(`Generated signed URL: ${awsObjectUrl}`);
+                const objectUrl = signedUrl.split('?')[0];
+                Logger.info(`Generated object URL: ${objectUrl}`);
 
-                return awsObjectUrl;
+                return { signedUrl, objectUrl };
             } catch (error) {
                 Logger.error(`Error uploading file stream to S3: ${filePath} for Google Drive File ID: ${googleDriveFileId}`, error);
 
