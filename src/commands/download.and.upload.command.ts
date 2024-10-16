@@ -43,7 +43,7 @@ export class DownloadAndUploadCommand {
             Logger.info(`File name retrieved: ${fileName}`)
 
             const driveStream = await this.googleDriveService.downloadFileAsStream(this.googleDriveFileId);
-            const { signedUrl, objectUrl } = await this.s3Service.uploadFileStream(driveStream, filePath, fileSize, this.googleDriveFileId);
+            const { signedUrl, objectUrl, s3Key } = await this.s3Service.uploadFileStream(driveStream, filePath, fileSize, this.googleDriveFileId);
 
             Logger.info(`File streamed and uploaded to S3 successfully`);
             Logger.info(`Signed URL: ${signedUrl}`);
@@ -55,7 +55,8 @@ export class DownloadAndUploadCommand {
                     ...this.payload,
                     status: 'success',
                     awsObjectUrl: objectUrl,
-                    awsSignedUrl: signedUrl
+                    awsSignedUrl: signedUrl,
+                    awsS3Key: s3Key
                 });
 
             const endTime = new Date();

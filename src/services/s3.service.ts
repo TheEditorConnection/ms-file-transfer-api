@@ -23,7 +23,7 @@ export class S3Service {
         Logger.info('S3Service initialized.');
     }
 
-    public async uploadFileStream(readableStream: stream.Readable, filePath: string, totalSize: number, googleDriveFileId: string): Promise<{ signedUrl: string, objectUrl: string }> {
+    public async uploadFileStream(readableStream: stream.Readable, filePath: string, totalSize: number, googleDriveFileId: string): Promise<{ signedUrl: string, objectUrl: string, s3Key: string }> {
         const MAX_RETRIES = 3;
         let attempt = 0;
 
@@ -65,7 +65,7 @@ export class S3Service {
                 const objectUrl = signedUrl.split('?')[0];
                 Logger.info(`Generated object URL: ${objectUrl}`);
 
-                return { signedUrl, objectUrl };
+                return { signedUrl, objectUrl, s3Key: filePath };
             } catch (error) {
                 Logger.error(`Error uploading file stream to S3: ${filePath} for Google Drive File ID: ${googleDriveFileId}`, error);
 
