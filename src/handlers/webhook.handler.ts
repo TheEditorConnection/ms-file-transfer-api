@@ -20,7 +20,7 @@ export class WebhookHandler {
 
         res.status(200).json({ status: 'received', payload });
 
-        const command = new DownloadAndUploadCommand(payload, authorizationToken);
+        const command = new DownloadAndUploadCommand(payload);
         command.execute();
     }
 }

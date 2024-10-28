@@ -1,6 +1,5 @@
 import { Config } from '../config/config';
 import { GoogleDriveService } from '../services/google.drive.service';
-import { JWTService } from '../services/jwt.service';
 import { S3Service } from '../services/s3.service';
 import { Logger } from '../utils/logger';
 import { Notifier } from '../utils/notifier';
@@ -12,27 +11,18 @@ export class DownloadAndUploadCommand {
     private deliveryItemId: string;
     private googleDriveService: GoogleDriveService;
     private s3Service: S3Service;
-    private jwtService: JWTService;
-    private authorizationToken: string;
 
-    constructor(payload: any, authorizationToken: string) {
+    constructor(payload: any) {
         this.payload = payload;
         this.googleDriveFileId = payload.googleDriveFileId;
         this.projectId = payload.projectId;
         this.deliveryItemId = payload.deliveryItemId;
         this.googleDriveService = new GoogleDriveService();
         this.s3Service = new S3Service();
-        this.jwtService = new JWTService();
-        this.authorizationToken = authorizationToken;
     }
 
     public async execute(): Promise<void> {
         const startTime = new Date();
-        const tokenIsValid = await this.jwtService.verify(this.authorizationToken);
-
-        if (!tokenIsValid) {
-            return;
-        }
 
         Logger.info(`Starting streaming upload process for Google Drive file ID: ${this.googleDriveFileId} at ${startTime.toISOString()}`);
 
