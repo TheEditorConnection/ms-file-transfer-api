@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { UploadToGoogleDriveCommand } from '../commands/upload.to.google.drive.command';
-import { snakeToCamel } from '../utils/caseConverter';
+import { snakeToCamel } from '../utils/case.converter';
 
 export class UploadWebhookHandler {
     public static async handle(req: Request, res: Response): Promise<void> {

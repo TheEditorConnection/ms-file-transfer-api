@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { DownloadAndUploadCommand } from '../commands/download.and.upload.command';
-import { snakeToCamel } from '../utils/caseConverter';
+import { snakeToCamel } from '../utils/case.converter';
 
 export class WebhookHandler {
     public static async handle(req: Request, res: Response): Promise<void> {

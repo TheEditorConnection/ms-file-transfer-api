@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { camelToSnake } from './caseConverter';
+import { camelToSnake } from './case.converter';
 import { Logger } from './logger';
 
 export class Notifier {
