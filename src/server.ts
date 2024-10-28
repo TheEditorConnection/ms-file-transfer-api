@@ -4,6 +4,7 @@ import { WebhookHandler } from './handlers/webhook.handler';
 import { Logger } from './utils/logger';
 import { UploadWebhookHandler } from './handlers/upload.webhook.handler';
 import dotenv from 'dotenv';
+import { authentication } from './middleware/authorization';
 
 dotenv.config();
 
@@ -11,7 +12,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(json());
-
+// We can also use app.use(authentication) but since not every route is protected we can work this way
 
 app.get('/', (_req, res) => {
     res.status(200).send('OK');
@@ -34,8 +35,8 @@ app.get('/info', (_req, res) => {
     res.status(200).json(appInfo);
 });
 
-app.post('/send-to-s3', WebhookHandler.handle);
-app.post('/send-to-gdrive', UploadWebhookHandler.handle);
+app.post('/send-to-s3', authentication, WebhookHandler.handle);
+app.post('/send-to-gdrive', authentication, UploadWebhookHandler.handle);
 
 app.listen(port, () => {
     Logger.info(`\n====================================\n🚀 Server running on port ${port}\n====================================\n`);
