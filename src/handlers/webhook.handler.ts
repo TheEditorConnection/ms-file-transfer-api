@@ -1,26 +1,19 @@
 import { Request, Response } from 'express';
 import { DownloadAndUploadCommand } from '../commands/download.and.upload.command';
 import { snakeToCamel } from '../utils/case.converter';
+import { IClientPayload } from '../interfaces/client.payload.interface';
 
-export class WebhookHandler {
-    public static async handle(req: Request, res: Response): Promise<void> {
-        const payload = snakeToCamel(req.body);
-        const { googleDriveFileId, projectId, deliveryItemId } = payload;
-        const authorizationToken = req.headers.authorization ? req.headers.authorization.split(" ")[1] : '';
+export const handleWebhook = async (req: Request, res: Response): Promise<void> => {
+    const payload: IClientPayload = snakeToCamel(req.body) as IClientPayload;
+    const { googleDriveFileId, projectId, deliveryItemId } = payload;
 
-        if (!googleDriveFileId || !projectId || !deliveryItemId) {
-            res.status(400).json({ error: 'Missing required parameters' });
-            return;
-        }
-
-        if (!authorizationToken) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
-        }
-
-        res.status(200).json({ status: 'received', payload });
-
-        const command = new DownloadAndUploadCommand(payload);
-        command.execute();
+    if (!googleDriveFileId || !projectId || !deliveryItemId) {
+        res.status(400).json({ error: 'Missing required parameters' });
+        return;
     }
-}
+
+    res.status(200).json({ status: 'received', payload });
+
+    const command = new DownloadAndUploadCommand(payload);
+    await command.execute();
+};

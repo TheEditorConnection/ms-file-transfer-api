@@ -87,7 +87,11 @@ export class GoogleDriveService {
                 supportsAllDrives: true
             });
 
-            const fileId = response.data.id!;
+            const fileId = response.data.id;
+            if (!fileId) {
+                throw new Error('Failed to upload file: File ID is undefined.');
+            }
+
             Logger.info(`File uploaded to Google Drive with ID: ${fileId}`);
             return fileId;
         } catch (error) {

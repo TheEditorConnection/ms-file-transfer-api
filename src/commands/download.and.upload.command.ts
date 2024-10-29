@@ -1,18 +1,19 @@
 import { Config } from '../config/config';
+import { IClientPayload } from '../interfaces/client.payload.interface';
 import { GoogleDriveService } from '../services/google.drive.service';
 import { S3Service } from '../services/s3.service';
 import { Logger } from '../utils/logger';
-import { Notifier } from '../utils/notifier';
+import { notify } from '../utils/notifier';
 
 export class DownloadAndUploadCommand {
-    private payload: any;
+    private payload: IClientPayload;
     private googleDriveFileId: string;
     private projectId: string;
     private deliveryItemId: string;
     private googleDriveService: GoogleDriveService;
     private s3Service: S3Service;
 
-    constructor(payload: any) {
+    constructor(payload: IClientPayload) {
         this.payload = payload;
         this.googleDriveFileId = payload.googleDriveFileId;
         this.projectId = payload.projectId;
@@ -28,7 +29,7 @@ export class DownloadAndUploadCommand {
 
         try {
             const fileName = await this.googleDriveService.getFileName(this.googleDriveFileId);
-            const fileSize = await this.googleDriveService.getFileSize(this.googleDriveFileId);  // Obtener el tamaño del archivo
+            const fileSize = await this.googleDriveService.getFileSize(this.googleDriveFileId);
             const filePath = `google_drive_upload/${this.projectId}/${this.deliveryItemId}/${this.googleDriveFileId}_${fileName}`;
             Logger.info(`File name retrieved: ${fileName}`)
 
@@ -38,7 +39,7 @@ export class DownloadAndUploadCommand {
             Logger.info(`File streamed and uploaded to S3 successfully`);
             Logger.info(`Signed URL: ${signedUrl}`);
             Logger.info(`Object URL: ${objectUrl}`);
-            Notifier.notify(
+            notify(
                 this.getUrl(),
                 this.getToken(),
                 {
@@ -56,7 +57,7 @@ export class DownloadAndUploadCommand {
 
         } catch (error) {
             Logger.error(`Error during file upload process`, error);
-            Notifier.notify(
+            notify(
                 this.getUrl(),
                 this.getToken(),
                 {

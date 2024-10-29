@@ -9,34 +9,34 @@ const customFormat = printf(({ level, message, timestamp, stack }) => {
 
 const logDirectory = path.join(__dirname, '../../logs');
 
-export class Logger {
-    private static logger = createLogger({
-        level: 'info',
-        format: combine(
-            timestamp(),
-            errors({ stack: true }),
-            customFormat
-        ),
-        transports: [
-            new transports.Console(),
-            new transports.File({ filename: path.join(logDirectory, 'error.log'), level: 'error' }),
-            new transports.File({ filename: path.join(logDirectory, 'combined.log') })
-        ]
-    });
+const loggerInstance = createLogger({
+    level: 'info',
+    format: combine(
+        timestamp(),
+        errors({ stack: true }),
+        customFormat
+    ),
+    transports: [
+        new transports.Console(),
+        new transports.File({ filename: path.join(logDirectory, 'error.log'), level: 'error' }),
+        new transports.File({ filename: path.join(logDirectory, 'combined.log') })
+    ]
+});
 
-    public static info(message: string) {
-        this.logger.info(message);
-    }
+export const Logger = {
+    info(message: string): void {
+        loggerInstance.info(message);
+    },
 
-    public static error(message: string, error?: Error) {
-        this.logger.error(message, error ? { stack: error.stack } : {});
-    }
+    error(message: string, err?: Error): void {
+        loggerInstance.error(message, err ? { stack: err.stack } : {});
+    },
 
-    public static warn(message: string) {
-        this.logger.warn(message);
-    }
+    warn(message: string): void {
+        loggerInstance.warn(message);
+    },
 
-    public static debug(message: string) {
-        this.logger.debug(message);
+    debug(message: string): void {
+        loggerInstance.debug(message);
     }
-}
+};
