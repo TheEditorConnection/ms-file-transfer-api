@@ -5,7 +5,7 @@ import { Config } from '../config/config';
 import { IClientPayload } from '../interfaces/client.payload.interface';
 import { notify } from '../utils/notifier';
 
-export class UploadToGoogleDriveCommand {
+export class S3ToGDriveTransferCommand {
     private payload: IClientPayload;
     private s3FilePath: string;
     private googleDriveFolderId: string;

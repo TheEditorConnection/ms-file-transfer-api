@@ -5,7 +5,7 @@ import { S3Service } from '../services/s3.service';
 import { Logger } from '../utils/logger';
 import { notify } from '../utils/notifier';
 
-export class DownloadAndUploadCommand {
+export class GDriveToS3TransferCommand {
     private payload: IClientPayload;
     private googleDriveFileId: string;
     private projectId: string;

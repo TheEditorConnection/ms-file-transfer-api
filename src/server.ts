@@ -3,8 +3,8 @@ import { json } from 'body-parser';
 import { Logger } from './utils/logger';
 import dotenv from 'dotenv';
 import { authentication } from './middleware/authorization';
-import { handleUploadWebhook } from './handlers/upload.webhook.handler';
-import { handleWebhook } from './handlers/webhook.handler';
+import { handleS3ToGDriveTransferWebhook } from './handlers/handle.s3.to.gdrive.transfer.webhook';
+import { handleGDriveToS3TransferWebhook } from './handlers/handle.gdrive.to.s3.transfer.webhook';
 
 dotenv.config();
 
@@ -34,8 +34,8 @@ app.get('/info', (_req, res) => {
     res.status(200).json(appInfo);
 });
 
-app.post('/send-to-s3', authentication, handleUploadWebhook);
-app.post('/send-to-gdrive', authentication, handleWebhook);
+app.post('/send-to-s3', authentication, handleGDriveToS3TransferWebhook);
+app.post('/send-to-gdrive', authentication, handleS3ToGDriveTransferWebhook);
 
 app.listen(port, () => {
     Logger.info(`\n====================================\n🚀 Server running on port ${port}\n====================================\n`);
