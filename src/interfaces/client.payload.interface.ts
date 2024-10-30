@@ -1,3 +1,3 @@
 export interface IClientPayload {
-    [key: string]: string;
+  [key: string]: string;
 }
