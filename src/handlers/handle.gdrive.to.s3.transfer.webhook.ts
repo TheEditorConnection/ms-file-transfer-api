@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { GDriveToS3TransferCommand } from '../commands/gdrive.to.s3.transfer.command';
-import { snakeToCamel } from '../utils/case.converter';
+import { camelToSnake, snakeToCamel } from '../utils/case.converter';
 import { IClientPayload } from '../interfaces/client.payload.interface';
 
 export const handleGDriveToS3TransferWebhook = async (req: Request, res: Response): Promise<void> => {
@@ -12,7 +12,7 @@ export const handleGDriveToS3TransferWebhook = async (req: Request, res: Respons
         return;
     }
 
-    res.status(200).json({ status: 'received', payload });
+    res.status(200).json({ status: 'received', payload: camelToSnake(payload) });
 
     const command = new GDriveToS3TransferCommand(payload);
     await command.execute();
