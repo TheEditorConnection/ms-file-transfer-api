@@ -4,6 +4,7 @@ import { Logger } from '../utils/logger';
 import * as stream from 'stream';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Error } from '../utils/errors/s3.error';
 
 export class S3Service {
     private s3: S3Client;
@@ -20,7 +21,6 @@ export class S3Service {
                 secretAccessKey: Config.get('AWS_SECRET_ACCESS_KEY')
             }
         });
-        Logger.info('S3Service initialized.');
     }
 
     public async uploadFileStream(readableStream: stream.Readable, filePath: string, totalSize: number, googleDriveFileId: string): Promise<{ signedUrl: string, objectUrl: string, s3Key: string }> {
@@ -60,17 +60,15 @@ export class S3Service {
                     Key: filePath
                 });
                 const signedUrl = await getSignedUrl(this.s3, command, { expiresIn: 604800 });
-                Logger.info(`Generated signed URL: ${signedUrl}`);
 
                 const objectUrl = signedUrl.split('?')[0];
-                Logger.info(`Generated object URL: ${objectUrl}`);
 
                 return { signedUrl, objectUrl, s3Key: filePath };
             } catch (error) {
                 Logger.error(`Error uploading file stream to S3: ${filePath} for Google Drive File ID: ${googleDriveFileId}`, error);
 
                 if (attempt >= MAX_RETRIES - 1) {
-                    throw error;
+                    throw new S3Error(filePath, 'upload', error as Error, googleDriveFileId);
                 }
 
                 Logger.info(`Retrying upload for file: ${filePath}, Google Drive File ID: ${googleDriveFileId}`);
@@ -97,7 +95,7 @@ export class S3Service {
             return response.Body as stream.Readable;
         } catch (error) {
             Logger.error(`Error downloading file from S3: ${filePath}`, error);
-            throw error;
+            throw new S3Error(filePath, 'download', error as Error)
         }
     }
 }

@@ -4,6 +4,7 @@ import { Logger } from '../utils/logger';
 import { Config } from '../config/config';
 import { IClientPayload } from '../interfaces/client.payload.interface';
 import { notify } from '../utils/notifier';
+import { handleError } from '../utils/errors/error.handler';
 
 export class S3ToGDriveTransferCommand {
     private payload: IClientPayload;
@@ -12,12 +13,14 @@ export class S3ToGDriveTransferCommand {
     private s3Service: S3Service;
     private googleDriveService: GoogleDriveService;
     private newFileName: string;
+    private transferId: string;
 
     constructor(payload: IClientPayload) {
         this.payload = payload;
         this.s3FilePath = payload.s3FilePath;
         this.googleDriveFolderId = payload.googleDriveFolderId;
         this.newFileName = payload.newFileName;
+        this.transferId = payload.transferId;
         this.s3Service = new S3Service();
         this.googleDriveService = new GoogleDriveService();
     }
@@ -58,16 +61,7 @@ export class S3ToGDriveTransferCommand {
             Logger.info(`Process completed at ${endTime.toISOString()}, total time: ${duration.toFixed(2)} seconds`);
 
         } catch (error) {
-            Logger.error('Error during file upload to Google Drive', error);
-
-            notify(
-                this.getUrl(),
-                this.getToken(),
-                {
-                    ...this.payload,
-                    status: 'fail',
-                    error: error.message
-                });
+            await handleError(error, this.transferId, this.payload, this.getUrl(), this.getToken());
         }
     }
 

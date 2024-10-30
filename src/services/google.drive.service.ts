@@ -3,6 +3,7 @@ import * as stream from 'stream';
 
 import { Config } from '../config/config';
 import { Logger } from '../utils/logger';
+import { GoogleDriveError } from '../utils/errors/google.drive.error';
 
 export class GoogleDriveService {
     private drive: drive_v3.Drive;
@@ -14,62 +15,53 @@ export class GoogleDriveService {
             scopes: ['https://www.googleapis.com/auth/drive']
         });
         this.drive = google.drive({ version: 'v3', auth });
-        Logger.info('GoogleDriveService initialized.');
     }
 
     public async getFileName(fileId: string): Promise<string> {
         try {
-            Logger.info(`Fetching file name for file ID: ${fileId}`);
             const response = await this.drive.files.get({
                 fileId,
                 fields: 'name',
                 supportsAllDrives: true
             });
             const fileName = response.data.name || '';
-            Logger.info(`File name retrieved: ${fileName}`);
             return fileName;
         } catch (error) {
             Logger.error(`Error fetching file name for file ID: ${fileId}`, error);
-            throw error;
+            throw new GoogleDriveError(fileId, 'fetch file name', error as Error);
         }
     }
 
     public async getFileSize(fileId: string): Promise<number> {
         try {
-            Logger.info(`Fetching file size for file ID: ${fileId}`);
             const response = await this.drive.files.get({
                 fileId,
                 fields: 'size',
                 supportsAllDrives: true
             });
             const fileSize = parseInt(response.data.size || '0', 10);
-            Logger.info(`File size retrieved: ${fileSize} bytes`);
             return fileSize;
         } catch (error) {
             Logger.error(`Error fetching file size for file ID: ${fileId}`, error);
-            throw error;
+            throw new GoogleDriveError(fileId, 'download file as stream', error as Error);
         }
     }
 
     public async downloadFileAsStream(fileId: string): Promise<stream.Readable> {
         try {
-            Logger.info(`Starting stream download for file ID: ${fileId}`);
             const response = await this.drive.files.get(
                 { fileId, alt: 'media', supportsAllDrives: true },
                 { responseType: 'stream' }
             );
-            Logger.info(`Download stream started for file ID: ${fileId}`);
             return response.data as stream.Readable;
         } catch (error) {
             Logger.error(`Error starting download stream for file ID: ${fileId}`, error);
-            throw error;
+            throw new GoogleDriveError(fileId, 'download file as stream', error as Error);
         }
     }
 
     public async uploadFileStream(readableStream: stream.Readable, fileName: string, folderId: string): Promise<string> {
         try {
-            Logger.info(`Uploading file: ${fileName} to Google Drive`);
-
             const fileMetadata = {
                 name: fileName,
                 parents: [folderId]
@@ -89,14 +81,14 @@ export class GoogleDriveService {
 
             const fileId = response.data.id;
             if (!fileId) {
-                throw new Error('Failed to upload file: File ID is undefined.');
+                throw new GoogleDriveError(fileName, 'upload file', new Error('File ID is undefined after upload.'));
             }
 
             Logger.info(`File uploaded to Google Drive with ID: ${fileId}`);
             return fileId;
         } catch (error) {
             Logger.error(`Error uploading file to Google Drive: ${fileName}`, error);
-            throw error;
+            throw new GoogleDriveError(fileName, 'upload file', error as Error);
         }
     }
 }

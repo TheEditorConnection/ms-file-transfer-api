@@ -12,7 +12,7 @@ export const handleGDriveToS3TransferWebhook = async (req: Request, res: Respons
         return;
     }
 
-    res.status(200).json({ status: 'received', payload: camelToSnake(payload) });
+    res.status(200).json({ status: 'received', payload: camelToSnake(payload), "transfer_id": payload.transferId });
 
     const command = new GDriveToS3TransferCommand(payload);
     await command.execute();
