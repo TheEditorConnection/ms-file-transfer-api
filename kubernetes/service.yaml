@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ms-file-transfer-api-service
-  namespace: ms-file-transfer-api
+  name: ms-file-transfer-service-test
+  namespace: ms-file-transfer-test-ns
   labels:
-    app: ms-file-transfer-api
+    app: ms-file-transfer-app-test
 spec:
   selector:
-    app: ms-file-transfer-api
+    app: ms-file-transfer-app-test
   ports:
     - protocol: TCP
       port: 80
