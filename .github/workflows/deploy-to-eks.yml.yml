@@ -68,3 +68,16 @@ jobs:
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Update Kubernetes Manifests with New Image
+        run: |
+          sed -i 's|image: .*|image: '"${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}"'|g' deployment.yaml
+
+      - name: Configure kubectl
+        run: |
+          aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Apply Kubernetes Manifests
+        run: |
+          kubectl apply -f deployment.yml
+          kubectl apply -f service.yml

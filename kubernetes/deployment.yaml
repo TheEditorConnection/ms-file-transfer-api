@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ms-file-transfer-api-deployment
-  namespace: ms-file-transfer-api
+  name: ms-file-transfer-deployment-test
+  namespace: ms-file-transfer-test-ns
   labels:
-    app: ms-file-transfer-api
+    app: ms-file-transfer-app-test
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      app: ms-file-transfer-api
+      app: ms-file-transfer-app-test
   template:
     metadata:
       labels:
-        app: ms-file-transfer-api
+        app: ms-file-transfer-app-test
     spec:
       affinity:
         nodeAffinity:
@@ -26,8 +26,8 @@ spec:
                       - amd64
                       - arm64
       containers:
-        - name: app-container
-          image: "<IMAGE_PLACEHOLDER>"
+        - name: ms-file-transfer-api-test
+          image: 019146316808.dkr.ecr.us-west-2.amazonaws.com/ms-file-transfer-api:8c4935d1d2e6b0ba76e217f259ab12b33b4c9a5e
           ports:
             - name: http
               containerPort: 80
