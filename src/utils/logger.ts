@@ -64,7 +64,7 @@ const s3Client = isProduction
   : null;
 
 async function getExistingLogContentFromS3(filename: string): Promise<string> {
-  if (!s3Client || !s3BucketName || !s3LogDirectory) return ""; // Verificación adicional
+  if (!s3Client || !s3BucketName || !s3LogDirectory) return "";
 
   const logKey = path.join(s3LogDirectory, filename);
 
@@ -75,7 +75,6 @@ async function getExistingLogContentFromS3(filename: string): Promise<string> {
     });
     const response = await s3Client.send(command);
 
-    // Read the content from the S3 object
     const stream = response.Body as Readable;
     const chunks: Buffer[] = [];
     for await (const chunk of stream) {
@@ -83,8 +82,12 @@ async function getExistingLogContentFromS3(filename: string): Promise<string> {
     }
     return Buffer.concat(chunks).toString("utf-8");
   } catch (error) {
-    console.error(`Failed to get log content from S3: ${logKey}`, error);
-    return "";
+    if (error.name === "NoSuchKey") {
+      return "";
+    } else {
+      console.error(`Failed to get log content from S3: ${logKey}`, error);
+      throw error;
+    }
   }
 }
 
@@ -92,10 +95,22 @@ async function uploadLogToS3(filename: string, content: string) {
   if (!s3Client || !s3BucketName || !s3LogDirectory) return;
 
   const logKey = path.join(s3LogDirectory, filename);
-  const existingContent = await getExistingLogContentFromS3(filename);
 
-  // Combine existing content with new content
-  const updatedContent = `${existingContent}\n${content}`;
+  // Primero intenta obtener el contenido existente
+  let existingContent = "";
+  try {
+    existingContent = await getExistingLogContentFromS3(filename);
+  } catch (error) {
+    console.log(error);
+    console.log(
+      `No existing log content found for ${logKey}, creating new log.`,
+    );
+  }
+
+  // Combina el contenido existente con el nuevo contenido, si hay alguno
+  const updatedContent = existingContent
+    ? `${existingContent}\n${content}`
+    : content;
 
   try {
     await s3Client.send(
