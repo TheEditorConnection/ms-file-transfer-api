@@ -31,6 +31,39 @@ spec:
           ports:
             - name: http
               containerPort: 80
+          env:
+            - name: GOOGLE_CREDENTIALS
+              value: ${{ secrets.GOOGLE_CREDENTIALS }}
+            - name: S3_BUCKET_NAME
+              value: ${{ env.S3_BUCKET_NAME }}
+            - name: AWS_REGION
+              value: ${{ secrets.AWS_REGION }}
+            - name: AWS_ACCESS_KEY_ID
+              value: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            - name: URL_GDRIVE_TO_S3
+              value: ${{ env.URL_GDRIVE_TO_S3 }}
+            - name: TOKEN_GDRIVE_TO_S3
+              value: ${{ secrets.TOKEN_GDRIVE_TO_S3 }}
+            - name: URL_S3_TO_GDRIVE
+              value: ${{ env.URL_S3_TO_GDRIVE }}
+            - name: TOKEN_S3_TO_GDRIVE
+              value: ${{ secrets.TOKEN_S3_TO_GDRIVE }}
+            - name: PORT
+              value: "80"
+            - name: JWT_SECRET
+              value: ${{ secrets.JWT_SECRET }}
+            - name: NODE_ENV
+              value: ${{ env.NODE_ENV }}
+            - name: INTERNAL_LOGGING
+              value: ${{ env.INTERNAL_LOGGING }}
+            - name: LOG_S3_BUCKET_NAME
+              value: ${{ env.LOG_S3_BUCKET_NAME }}
+            - name: S3_LOG_DIRECTORY
+              value: ${{ env.S3_LOG_DIRECTORY }}
+            - name: LOG_S3_REGION
+              value: ${{ env.LOG_S3_REGION }}
           imagePullPolicy: IfNotPresent
       nodeSelector:
         kubernetes.io/os: linux
