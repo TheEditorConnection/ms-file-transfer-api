@@ -71,7 +71,7 @@ jobs:
 
       - name: Update Kubernetes Manifests with New Image
         run: |
-          sed -i 's|image: .*|image: '"${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}"'|g' deployment.yaml
+          sed -i 's|image: .*|image: '"${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}"'|g' kubernetes/deployment.yaml
 
       - name: Configure kubectl
         run: |
@@ -79,5 +79,5 @@ jobs:
 
       - name: Apply Kubernetes Manifests
         run: |
-          kubectl apply -f deployment.yml
-          kubectl apply -f service.yml
+          kubectl apply -f kubernetes/deployment.yml
+          kubectl apply -f kubernetes/service.yml
